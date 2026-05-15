@@ -1,8 +1,11 @@
 # Neural-Machine-Translation
-Building a Machine-Translation Transformer Model, That Translates from English to Arabic.  
+Building a Machine-Translation Transformer Model in PyTorch, That Translates from English to Arabic.  
 > Final Project for `Pattern Recognition` Faculty course.
 
-## Methodology
+## 1) Experiments logging
+using `MLFLow` and `DagsHub` for logging different experiments on this link: [Experiments](https://dagshub.com/michael-nabil/Neural-Machine-Translation.mlflow/#/experiments/0/runs?searchFilter=&orderByKey=attributes.start_time&orderByAsc=false&startTime=ALL&lifecycleFilter=Active&modelVersionFilter=All+Runs&datasetsFilter=W10%3D)
+
+## 2) Methodology
 - This architecture focuses on building a Transformer model that translates relatively short conversational sentences.  
 - To achieve this, I have used a combination of datasets
   - the conversational data `Helsinki-NLP/opus-100`
@@ -12,7 +15,7 @@ Building a Machine-Translation Transformer Model, That Translates from English t
   - Limiting the number of training sentence pairs to `120k` pairs.
   - Limiting the sentences length to `30` words and discarding sentences having exceeding this limit.
 
-## Text preprocessing
+## 3) Text preprocessing
 > In Text preprocessing for translation, removing stop words and punctuation prevents the model from being able to translate the stop words and the punctuation correctly. so i havne't messed with the stop words and punctuation and preserved them.
 - ### For `Arabic & English` sentences:
     - (1) remove special characters
@@ -28,10 +31,14 @@ Building a Machine-Translation Transformer Model, That Translates from English t
    - (4) replace arabic comma and question marks with englsih one (to prevent consumption of limited vocab words by words having these character variants)
    - (5) replace arabic numbers with english ones.
 
-## Used Datasets
+## 4) Used Datasets
 1) `Helsinki-NLP/opus-100` `ar-en`
 2) `news_commentary` `ar-en`
 3) `Custom dataset` available in this [link](https://raw.githubusercontent.com/SamirMoustafa/nmt-with-attention-for-ar-to-en/master/ara_.txt)
 
-## Experiments logging
-using `MLFLow` and `DagsHub` for logging different experiments on this link: [Experiments](https://dagshub.com/michael-nabil/Neural-Machine-Translation.mlflow/#/experiments/0/runs?searchFilter=&orderByKey=attributes.start_time&orderByAsc=false&startTime=ALL&lifecycleFilter=Active&modelVersionFilter=All+Runs&datasetsFilter=W10%3D)
+## 5) Tokenizer
+Used `BPE` Tokenizer instead of tokenization on white spaces.
+
+## 6) Evaluation Metrices
+- BLEU
+- chrF++
