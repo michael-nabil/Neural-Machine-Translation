@@ -1,6 +1,7 @@
 # Neural-Machine-Translation
 Building a Machine-Translation Transformer Model in PyTorch, That Translates from English to Arabic.  
-> Final Project for `Pattern Recognition` Faculty course.
+> Final Project for `Pattern Recognition` Faculty course.  
+> The Notebook link on Kaggle, check it out: [here](https://www.kaggle.com/code/michaelnabil88/en-ar-translation).
 
 ## 1) Experiments logging
 using `MLFLow` and `DagsHub` for logging different experiments on this link: [Experiments](https://dagshub.com/michael-nabil/Neural-Machine-Translation.mlflow/#/experiments/0/runs?searchFilter=&orderByKey=attributes.start_time&orderByAsc=false&startTime=ALL&lifecycleFilter=Active&modelVersionFilter=All+Runs&datasetsFilter=W10%3D)
