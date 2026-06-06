@@ -150,15 +150,23 @@ def load_resources():
     # Initialize Model Hyperparameters (Must match Part 3 and Part 10)
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
+    # Hparams
+    VOCAB_SIZE = 10000
+    EMB_SIZE = 256
+    NHEAD = 4
+    FFN_HID_DIM = 512
+    NUM_ENCODER_LAYERS = 3
+    NUM_DECODER_LAYERS = 3
+
     # Reconstruct Model
-    model = ShortSequenceTransformer(
-        src_vocab_size=10000,
-        tgt_vocab_size=10000,
-        d_model=256,
-        n_heads=4,
-        num_layers=3,
-        ffn_hidden=512,
-        max_len=30
+    model = Seq2SeqTransformer(
+        NUM_ENCODER_LAYERS,
+        NUM_DECODER_LAYERS,
+        EMB_SIZE, 
+        NHEAD,
+        VOCAB_SIZE,
+        VOCAB_SIZE,
+        FFN_HID_DIM
     ).to(DEVICE)
     
     # Load Weights
