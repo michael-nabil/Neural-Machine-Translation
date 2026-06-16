@@ -13,8 +13,9 @@ using `MLFLow` and `DagsHub` for logging different experiments on this link: [Ex
   - and `news_commentary` which has more official tone to help the model learn the language structure.
   - the third custom dataset is regular sentences.
 - This model is also aimed to be light weight, so I have used data size relative to the scale of the model parameters count.
-  - Limiting the number of training sentence pairs to `120k` pairs.
+  - Limiting the number of training sentence pairs to `120k` pairs, to suit the size of the model (params count).
   - Limiting the sentences length to `30` words and discarding sentences having exceeding this limit.
+  - Used 80% of `Helsinki-NLP/opus-100` as it is more conversational (and the model is aimed for translating conversational sentences), and 20% of `news_commentary` as it is more formal to get the model the sence of the language structure
 
 ## 3) Text preprocessing
 > In Text preprocessing for translation, removing stop words and punctuation prevents the model from being able to translate the stop words and the punctuation correctly. so i havne't messed with the stop words and punctuation and preserved them.
