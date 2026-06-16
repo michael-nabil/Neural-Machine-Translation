@@ -9,7 +9,7 @@ import math
 # Set page configuration
 st.set_page_config(
     page_title="English to Arabic Translator",
-    page_icon="🤖",
+    page_icon="",
     layout="centered"
 )
 
@@ -240,12 +240,12 @@ def generate_translation(model, src_sentence, en_tokenizer, ar_tokenizer, device
 # ==========================================
 # 5. Streamlit UI Elements
 # ==========================================
-st.title("🌐 Conversational NMT Dashboard")
+st.title("Conversational NMT Dashboard")
 st.subheader("English to Modern Standard Arabic (MSA) Translation")
 st.write("This lightweight model is optimized for short conversational phrases and dialogue configurations under 30 words.")
 
 # Layout Configuration
-st.sidebar.header("📊 Model Specifications")
+st.sidebar.header("Model Specifications")
 st.sidebar.markdown("""
 - **Architecture:** 3-Layer Transformer
 - **Embedding Dim ($d_{model}$):** 256
@@ -279,7 +279,7 @@ if st.button("Translate", type="primary"):
                 output_translation = generate_translation(model, user_input, en_tokenizer, ar_tokenizer, DEVICE)
                 
                 # Display Output Container
-                st.markdown("### 📝 Translation Output:")
+                st.markdown("### Translation Output:")
                 st.success(output_translation)
             except Exception as e:
                 st.error(f"Inference Runtime Error: {e}")
