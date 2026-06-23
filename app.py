@@ -140,12 +140,12 @@ def create_masks(src, tgt, src_pad_idx, tgt_pad_idx):
 def load_resources():
     """Loads tokenizers and model weights into memory exactly once."""
     # Load Tokenizers
-    if not os.path.exists("en_tokenizer.json") or not os.path.exists("ar_tokenizer.json"):
+    if not os.path.exists(r"model_artifacts\en_tokenizer.json") or not os.path.exists(r"model_artifacts\ar_tokenizer.json"):
         st.error("Tokenizer files ('en_tokenizer.json', 'ar_tokenizer.json') not found in the current directory.")
         return None, None, None
 
-    en_tokenizer = Tokenizer.from_file("en_tokenizer.json")
-    ar_tokenizer = Tokenizer.from_file("ar_tokenizer.json")
+    en_tokenizer = Tokenizer.from_file(r"model_artifacts\en_tokenizer.json")
+    ar_tokenizer = Tokenizer.from_file(r"model_artifacts\ar_tokenizer.json")
     
     # Initialize Model Hyperparameters (Must match Part 3 and Part 10)
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -170,14 +170,14 @@ def load_resources():
     ).to(DEVICE)
     
     # Load Weights
-    if os.path.exists("best_transformer_arabic.pth"):
+    if os.path.exists(r"model_artifacts\best_transformer_arabic.pth"):
         # Map storage to CPU if GPU isn't available to prevent runtime crashes
-        state_dict = torch.load("best_transformer_arabic.pth", map_location=DEVICE)
+        state_dict = torch.load(r"model_artifacts\best_transformer_arabic.pth", map_location=DEVICE)
         model.load_state_dict(state_dict)
         model.eval()
     else:
         st.error("'best_transformer_arabic.pth' weights file not found.")
-        return None, None, None
+        return None, None, None, None
         
     return model, en_tokenizer, ar_tokenizer, DEVICE
 
