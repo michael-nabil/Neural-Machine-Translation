@@ -6,16 +6,15 @@ import streamlit as st
 from tokenizers import Tokenizer
 import math
 
-# Set page configuration
+# Setting page configuration
 st.set_page_config(
     page_title="English to Arabic Translator",
     page_icon="",
     layout="centered"
 )
 
-# ==========================================
-# 1. Text Preprocessing (From Part 6)
-# ==========================================
+# 1. Text Preprocessing
+
 def clean_english_input(text):
     """Applies the exact same cleaning rules used during training."""
     text = re.sub(r'<[^>]+>', ' ', text)
@@ -25,9 +24,9 @@ def clean_english_input(text):
     text = re.sub(r'\s+', ' ', text)
     return text.strip()
 
-# ==========================================
+
 # 2. Model Architecture Skeleton
-# ==========================================
+
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model, max_len=5000, dropout=0.1):
         super(PositionalEncoding, self).__init__()
@@ -133,9 +132,8 @@ def create_masks(src, tgt, src_pad_idx, tgt_pad_idx):
     
     return src_mask, tgt_mask, src_padding_mask, tgt_padding_mask
 
-# ==========================================
 # 3. Cached Resource Loading (Optimizes Performance)
-# ==========================================
+
 @st.cache_resource
 def load_resources():
     """Loads tokenizers and model weights into memory exactly once."""
@@ -184,9 +182,9 @@ def load_resources():
 # Load resources smoothly
 model, en_tokenizer, ar_tokenizer, DEVICE = load_resources()
 
-# ==========================================
+
 # 4. Greedy Decoding Inference Loop
-# ==========================================
+
 def generate_translation(model, src_sentence, en_tokenizer, ar_tokenizer, device, max_len=30):
     """Performs token-by-token generation using the trained Transformer."""
     # Clean and encode source text
@@ -251,9 +249,9 @@ def generate_translation(model, src_sentence, en_tokenizer, ar_tokenizer, device
     translation = ar_tokenizer.decode(generated_ids, skip_special_tokens=True)
     return translation
 
-# ==========================================
+
 # 5. Streamlit UI Elements
-# ==========================================
+
 st.title("Conversational NMT Dashboard")
 st.subheader("English to Modern Standard Arabic (MSA) Translation")
 st.write("This lightweight model is optimized for short conversational phrases and dialogue configurations under 30 words.")
