@@ -191,50 +191,64 @@ def generate_translation(model, src_sentence, en_tokenizer, ar_tokenizer, device
     """Performs token-by-token generation using the trained Transformer."""
     # Clean and encode source text
     cleaned_src = clean_english_input(src_sentence)
-    encoded_src = en_tokenizer.encode(cleaned_src)
+    encoded_src_ids = en_tokenizer.encode(cleaned_src).ids
     
-    # Add special tokens if your tokenizer doesn't add them automatically
-    src_tokens = [encoded_src.id_to_token(idx) for idx in encoded_src.ids]
-    # Assuming SOS and EOS are handled, or manually casting to tensor:
-    src_tensor = torch.tensor([encoded_src.ids], dtype=torch.long, device=device) # Shape: (1, src_len)
+    # Get Special Token IDs
+    EN_SOS_IDX = en_tokenizer.token_to_id("[SOS]")
+    EN_EOS_IDX = en_tokenizer.token_to_id("[EOS]")
+    AR_SOS_IDX = ar_tokenizer.token_to_id("[SOS]")
+    AR_EOS_IDX = ar_tokenizer.token_to_id("[EOS]")
     
-    # Special Token IDs from your vocabulary
-    SOS_IDX = ar_tokenizer.token_to_id("[SOS]")
-    EOS_IDX = ar_tokenizer.token_to_id("[EOS]")
+    # Wrap the English IDs with [SOS] and [EOS] and cast to a 2D tensor (Batch size 1)
+    src_tensor = torch.tensor([[EN_SOS_IDX] + encoded_src_ids + [EN_EOS_IDX]], dtype=torch.long, device=device)
     
-    # Initialize target sequence with the start token
-    ys = torch.tensor([[SOS_IDX]], dtype=torch.long, device=device) # Shape: (1, 1)
-    
+    model.eval()
     with torch.no_grad():
-        # Step A: Pre-calculate Encoder Memory (Only once per sentence!)
-        # Create an empty mask or matching padding mask if required by your model
+        # Step A: Pre-calculate Encoder Memory
+        # Create a dummy mask of zeros for the source sequence
         src_mask = torch.zeros((src_tensor.shape[1], src_tensor.shape[1]), device=device).type(torch.bool)
-        memory = model.encode(src_tensor, src_mask)
+        # We don't need a padding mask for a single sentence without padding, but we pass an all-False tensor to be safe
+        src_padding_mask = torch.zeros((1, src_tensor.shape[1]), device=device).type(torch.bool)
+        
+        # 1. Manually embed and encode the source sequence
+        src_emb = model.positional_encoding(model.src_tok_emb(src_tensor) * (model.transformer.d_model ** 0.5))
+        memory = model.transformer.encoder(src_emb, mask=src_mask, src_key_padding_mask=src_padding_mask)
         
         # Step B: Loop to generate tokens sequentially
+        ys = torch.tensor([[AR_SOS_IDX]], dtype=torch.long, device=device)
+        
         for _ in range(max_len - 1):
-            # Create autoregressive causal mask for decoder
+            # 2. Create autoregressive causal mask for decoder
             tgt_mask = (torch.triu(torch.ones((ys.shape[1], ys.shape[1]), device=device)) == 1).transpose(0, 1)
             tgt_mask = tgt_mask.float().masked_fill(tgt_mask == 0, float('-inf')).masked_fill(tgt_mask == 1, float(0.0))
             
-            # Forward pass through decoder
-            out = model.decode(ys, memory, src_mask, tgt_mask)
-            prob = out[:, -1] # Get probabilities of the very last token
+            # 3. Manually embed the current target sequence and decode
+            tgt_emb = model.positional_encoding(model.tgt_tok_emb(ys) * (model.transformer.d_model ** 0.5))
+            out = model.transformer.decoder(tgt_emb, memory, tgt_mask=tgt_mask, memory_key_padding_mask=src_padding_mask)
+            
+            # 4. Project the last generated token to the vocabulary space
+            logits = model.generator(out[:, -1])
             
             # Select token with highest probability
-            next_word = torch.argmax(prob, dim=-1).item()
+            _, next_word = torch.max(logits, dim=1)
+            next_word_id = next_word.item()
             
             # Append token to sequence
-            ys = torch.cat([ys, torch.tensor([[next_word]], device=device)], dim=1)
+            ys = torch.cat([ys, torch.tensor([[next_word_id]], device=device)], dim=1)
             
             # Break if End-of-Sentence token is reached
-            if next_word == EOS_IDX:
+            if next_word_id == AR_EOS_IDX:
                 break
                 
     # Decode token IDs back to a human-readable Arabic string
     generated_ids = ys.squeeze().tolist()
-    # Strip away special tokens during decoding
-    translation = ar_tokenizer.decode(generated_ids)
+    
+    # Handle edge case if it only generates a single token
+    if isinstance(generated_ids, int):
+        generated_ids = [generated_ids]
+        
+    # skip_special_tokens=True automatically strips [SOS] and [EOS] from the final text
+    translation = ar_tokenizer.decode(generated_ids, skip_special_tokens=True)
     return translation
 
 # ==========================================
