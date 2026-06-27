@@ -136,46 +136,43 @@ def create_masks(src, tgt, src_pad_idx, tgt_pad_idx):
 
 @st.cache_resource
 def load_resources():
-    """Loads tokenizers and model weights into memory exactly once."""
-    # Load Tokenizers
+    """Loads tokenizers, dynamic hyperparameters, and model weights."""
+    
+    # 1. Load Tokenizers
     if not os.path.exists(r"model_artifacts\en_tokenizer.json") or not os.path.exists(r"model_artifacts\ar_tokenizer.json"):
-        st.error("Tokenizer files ('en_tokenizer.json', 'ar_tokenizer.json') not found in the current directory.")
-        return None, None, None
+        st.error("Tokenizer files not found.")
+        return None, None, None, None
 
     en_tokenizer = Tokenizer.from_file(r"model_artifacts\en_tokenizer.json")
     ar_tokenizer = Tokenizer.from_file(r"model_artifacts\ar_tokenizer.json")
     
-    # Initialize Model Hyperparameters (Must match Part 3 and Part 10)
     DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     
-    # Hparams
-    VOCAB_SIZE = 10000
-    EMB_SIZE = 256
-    NHEAD = 4
-    FFN_HID_DIM = 512
-    NUM_ENCODER_LAYERS = 3
-    NUM_DECODER_LAYERS = 3
-
-    # Reconstruct Model
-    model = Seq2SeqTransformer(
-        NUM_ENCODER_LAYERS,
-        NUM_DECODER_LAYERS,
-        EMB_SIZE, 
-        NHEAD,
-        VOCAB_SIZE,
-        VOCAB_SIZE,
-        FFN_HID_DIM
-    ).to(DEVICE)
-    
-    # Load Weights
-    if os.path.exists(r"model_artifacts\best_transformer_arabic.pth"):
-        # Map storage to CPU if GPU isn't available to prevent runtime crashes
-        state_dict = torch.load(r"model_artifacts\best_transformer_arabic.pth", map_location=DEVICE)
-        model.load_state_dict(state_dict)
-        model.eval()
-    else:
-        st.error("'best_transformer_arabic.pth' weights file not found.")
+    # 2. Load the Master Checkpoint
+    checkpoint_path = r"model_artifacts\best_transformer_arabic.pth"
+    if not os.path.exists(checkpoint_path):
+        st.error(f"'{checkpoint_path}' not found.")
         return None, None, None, None
+        
+    # Map storage to CPU if GPU isn't available
+    checkpoint = torch.load(checkpoint_path, map_location=DEVICE)
+    
+    # 3. Extract Hyperparameters and Weights
+    # Fallback error handling just in case an old weights-only file is loaded
+    if 'hparams' not in checkpoint or 'state_dict' not in checkpoint:
+        st.error("Invalid checkpoint format. Ensure you saved a dict with 'hparams' and 'state_dict'.")
+        return None, None, None, None
+        
+    hparams = checkpoint['hparams']
+    state_dict = checkpoint['state_dict']
+    
+    # 4. Dynamically Reconstruct Model
+    # We unpack the dictionary directly into the constructor
+    model = Seq2SeqTransformer(**hparams).to(DEVICE)
+    
+    # Load the weights into the dynamically created model
+    model.load_state_dict(state_dict)
+    model.eval()
         
     return model, en_tokenizer, ar_tokenizer, DEVICE
 
